@@ -1,0 +1,176 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LaTeX Template: Project Titlepage Modified (v 0.1) by rcx
+%
+% Original Source: http://www.howtotex.com
+% Date: February 2014
+% 
+% This is a title page template which be used for articles & reports.
+% 
+% This is the modified version of the original Latex template from
+% aforementioned website.
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt]{article}
+\usepackage[a4paper]{geometry}
+\usepackage[myheadings]{fullpage}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{graphicx, wrapfig, subcaption, setspace, booktabs}
+\usepackage[T1]{fontenc}
+\usepackage[font=small, labelfont=bf]{caption}
+\usepackage{fourier}
+\usepackage[protrusion=true, expansion=true]{microtype}
+\usepackage[english]{babel}
+\usepackage{sectsty}
+\usepackage{url, lipsum}
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\onehalfspacing
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{5}
+
+%-------------------------------------------------------------------------------
+% HEADER & FOOTER
+%-------------------------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\setlength\headheight{15pt}
+\fancyhead[L]{Kevin Klein}
+%\fancyhead[R]{Anglia Ruskin University}
+\fancyfoot[R]{Page \thepage\ of \pageref{LastPage}}
+%-------------------------------------------------------------------------------
+% TITLE PAGE
+%-------------------------------------------------------------------------------
+
+\begin{document}
+
+\title{ \normalsize \textsc{Social Data Science project}
+		\HRule{0.5pt} \\
+		\LARGE How do internal and external reactions towards rises and falls of the S\&P 500 index differ?
+		\HRule{2pt} \\ [0.5cm]
+		\normalsize \today \vspace*{5\baselineskip}}
+
+\date{}
+
+\author{
+		Kevin Klein \\ }
+
+\maketitle
+\tableofcontents
+\newpage
+
+%-------------------------------------------------------------------------------
+% Section title formatting
+\sectionfont{\scshape}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+% BODY
+%-------------------------------------------------------------------------------
+
+\section{Motivation}
+Humans are susceptible to a range of conscious biases [reference]. However, many times, one might look for an objective assessment of a situation. This project aims to address this desire in the realm of investing. Understanding the difference in perception of other people's and oneself's success,
+in other words obtaining a more realistic perspective is a precondition to consciously and actively counteract biases such as the 'the grass is greener' effect.
+
+? Assumptions
+? Hypotheses
+\section{Project plan}
+\section{Data retrieval}
+We refer to three datasets each comprising 254 weeks starting from February 17 2013. Each datapoint corresponds to a value assigned to one of the 254 weeks.
+
+The financial data was provided by the Wall Street Journal \footnote{http://quotes.wsj.com/index/SPX/historical-prices} with daily opening and closing prices for the specified time range.
+
+The Google query quantification has been provided by Google Trends. In particular the \emph{S\&P 500} market index topic could be used, instead of a simple keyword search. Unfortunately, for larger time ranges, results are restricted to be on a weekly basis. Moreover, this cannot be simply circumvented by merging data of many shorter time ranges, as the data represents locally normalized instead of global quantities. 
+
+The reddit comment bodies stem from a publicly available dataset\footnote{https://files.pushshift.io/reddit/comments/} of all reddit comments from and including 2006 and 2017 . In particular, this dataset was access via Google Cloud's BigQuery platform \footnote{https://bigquery.cloud.google.com/dataset/fh-bigquery/reddit\_comments}. For a given week, all relevant comments were retrieved via a BigQuery library for python\footnote{https://cloud.google.com/bigquery/docs/reference/libraries\#client-libraries-install-python}. A comment was considered relevant if its body, turned lower case, contained the substring \emph{s\&p 500}. 
+
+\section{Data processing}
+
+? Normalization
+
+For each date within the time range, the difference between closing and opening price was recorded and aggregated to a weekly mean, we will refer to this as \emph{change}. Weeks with strictly positive change are considered positive weeks, weeks with strictly negative change are considered negative weeks. Negative week changes were negated in order to represent positive values.
+
+Per week, the number of relevant reddit comments as well as their average sentiment have been recorded. The sentiment analysis is based on nltk's SentimentIntensityAnalyzer\footnote{http://www.nltk.org/api/nltk.sentiment.html}. The latter provided a compound polarity score per datapoint.
+
+\section{Analysis}
+
+\section{Conclusion}
+
+\section{Critique}
+
+%-------------------------------------------------------------------------------
+% REFERENCES
+%-------------------------------------------------------------------------------
+\newpage
+\section*{References}
+\addcontentsline{toc}{section}{References}
+
+Anand, U., 2010. The Elusive Free Radicals, \textit{The Clinical Chemist,} [e-journal] Available at:<\url{http://www.clinchem.org/content/56/10/1649.full.pdf}> [Accessed 2 November 2013]
+\newline
+\newline
+
+\end{document}
+
+%-------------------------------------------------------------------------------
+% SNIPPETS
+%-------------------------------------------------------------------------------
+
+%\begin{figure}[!ht]
+%	\centering
+%	\includegraphics[width=0.8\textwidth]{file_name}
+%	\caption{}
+%	\centering
+%	\label{label:file_name}
+%\end{figure}
+
+%\begin{figure}[!ht]
+%	\centering
+%	\includegraphics[width=0.8\textwidth]{graph}
+%	\caption{Blood pressure ranges and associated level of hypertension (American Heart Association, 2013).}
+%	\centering
+%	\label{label:graph}
+%\end{figure}
+
+%\begin{wrapfigure}{r}{0.30\textwidth}
+%	\vspace{-40pt}
+%	\begin{center}
+%		\includegraphics[width=0.29\textwidth]{file_name}
+%	\end{center}
+%	\vspace{-20pt}
+%	\caption{}
+%	\label{label:file_name}
+%\end{wrapfigure}
+
+%\begin{wrapfigure}{r}{0.45\textwidth}
+%	\begin{center}
+%		\includegraphics[width=0.29\textwidth]{manometer}
+%	\end{center}
+%	\caption{Aneroid sphygmomanometer with stethoscope (Medicalexpo, 2012).}
+%	\label{label:manometer}
+%\end{wrapfigure}
+
+%\begin{table}[!ht]\footnotesize
+%	\centering
+%	\begin{tabular}{cccccc}
+%	\toprule
+%	\multicolumn{2}{c} {Pearson's correlation test} & \multicolumn{4}{c} {Independent t-test} \\
+%	\midrule	
+%	\multicolumn{2}{c} {Gender} & \multicolumn{2}{c} {Activity level} & \multicolumn{2}{c} {Gender} \\
+%	\midrule
+%	Males & Females & 1st level & 6th level & Males & Females \\
+%	\midrule
+%	\multicolumn{2}{c} {BMI vs. SP} & \multicolumn{2}{c} {Systolic pressure} & \multicolumn{2}{c} {Systolic Pressure} \\
+%	\multicolumn{2}{c} {BMI vs. DP} & \multicolumn{2}{c} {Diastolic pressure} & \multicolumn{2}{c} {Diastolic pressure} \\
+%	\multicolumn{2}{c} {BMI vs. MAP} & \multicolumn{2}{c} {MAP} & \multicolumn{2}{c} {MAP} \\
+%	\multicolumn{2}{c} {W:H ratio vs. SP} & \multicolumn{2}{c} {BMI} & \multicolumn{2}{c} {BMI} \\
+%	\multicolumn{2}{c} {W:H ratio vs. DP} & \multicolumn{2}{c} {W:H ratio} & \multicolumn{2}{c} {W:H ratio} \\
+%	\multicolumn{2}{c} {W:H ratio vs. MAP} & \multicolumn{2}{c} {\% Body fat} & \multicolumn{2}{c} {\% Body fat} \\
+%	\multicolumn{2}{c} {} & \multicolumn{2}{c} {Height} & \multicolumn{2}{c} {Height} \\
+%	\multicolumn{2}{c} {} & \multicolumn{2}{c} {Weight} & \multicolumn{2}{c} {Weight} \\
+%	\multicolumn{2}{c} {} & \multicolumn{2}{c} {Heart rate} & \multicolumn{2}{c} {Heart rate} \\
+%	\bottomrule
+%	\end{tabular}
+%	\caption{Parameters that were analysed and related statistical test performed for current study. BMI - body mass index; SP - systolic pressure; DP - diastolic pressure; MAP - mean arterial pressure; W:H ratio - waist to hip ratio.}
+%	\label{label:tests}
+%\end{table}

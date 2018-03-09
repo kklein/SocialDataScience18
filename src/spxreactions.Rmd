@@ -1,0 +1,212 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+```{r}
+library(dplyr)
+
+fitLinear <- function(x, y) {
+  a <- NULL
+  a$x <- x
+  a$y <- y
+  f = lm(formula = y~x, data = a)
+  return(f)
+}
+
+fitLog <- function(x, y) {
+  a <- NULL 
+  a$x <- x
+  a$y <- y
+  fneglog = nls(y ~ log(x) * K + J, start=list(K=1, J = 1), data = a)
+  x <- seq(min(a$x), max(a$x), length=100)
+  y <- predict(object = fneglog, newdata = data.frame(x = x))
+  return(list(x,y))
+}
+
+minMaxNormalize <- function(x) {
+  return((x - min(x))/(max(x) - min(x)))
+}
+
+posColor = "red"
+negColor = "blue"
+nWeeks = 254
+
+```
+
+
+Load Goolge trends data.
+
+```{r}
+trends = read.csv("../data/spxtrends_130217-180216.csv", header = TRUE)
+names(trends) = c("week", "queries")
+trends$week <- as.Date(trends$week, "%Y-%m-%d")
+trends <- trends[1 : nWeeks, ]
+#trends$queries <- minMaxNormalize(trends$queries)
+```
+
+Load index performance data and compute the daily change.
+```{r}
+read.csv("../data/spxvalue_130217-180216.csv", header = TRUE) %>% select(Date, Open, Close) -> dailyPerf
+names(dailyPerf) = c("date", "open", "close")
+dailyPerf$date <- as.Date(dailyPerf$date, "%m/%d/%y")
+dailyPerf$change <- dailyPerf$close - dailyPerf$open
+dailyPerf %>% select(date, change) %>% arrange(date) -> dailyPerf
+
+```
+
+
+Initialize the weekly perfomance dataframe.
+```{r}
+change <- (dailyPerf$change[1] + dailyPerf$change[2] + dailyPerf$change[3])/3
+date <- trends$week[1]
+perf <- data.frame(week = NULL, change = NULL)
+perf <- rbind(perf, data.frame(week = date, change = change))
+```
+
+Fill the weekly perfomance dataframe.
+```{r}
+dailyPerfIndex <- 4
+trendsIndex <- 2
+while(trendsIndex < length(trends$week)) {
+  change <- 0
+  startDate <- trends$week[trendsIndex]
+  endDate <- trends$week[trendsIndex]
+  count <- 0
+  while(endDate < startDate + 7) {
+    change <- change + dailyPerf$change[dailyPerfIndex]
+    dailyPerfIndex <- dailyPerfIndex + 1
+    endDate <- dailyPerf$date[dailyPerfIndex]
+    count <- count + 1
+  }
+  change <- change / count
+  perf <- rbind(perf, data.frame(week = startDate, change = change))
+  trendsIndex <- trendsIndex + 1
+}
+perf <- perf[1:nWeeks,]
+```
+
+```{r}
+perf %>% filter(change > 0) -> posPerf
+perf %>% filter(change < 0) -> negPerf
+negPerf$change = - negPerf$change
+#posPerf$change = minMaxNormalize(posPerf$change)
+#negPerf$change = minMaxNormalize(negPerf$change)
+```
+
+```{r}
+trends %>% filter(perf$change > 0) -> posTrends
+trends %>% filter(perf$change < 0) -> negTrends
+posTrends$queries <- minMaxNormalize(posTrends$queries)
+negTrends$queries <- minMaxNormalize(negTrends$queries)
+```
+
+```{r}
+plot(posPerf$week, posPerf$change, ylim = c(0, 1))
+points(posTrends$week, posTrends$queries, col = posColor)
+
+plot(negPerf$week, negPerf$change, ylim = c(0, 1))
+points(negTrends$week, negTrends$queries, col = negColor)
+```
+
+```{r}
+fTrendsNegLin = fitLinear(negPerf$change, negTrends$queries)
+plot(negPerf$change, negTrends$queries, col = negColor)
+abline(fTrendsNegLin$coefficients[1], fTrendsNegLin$coefficients[2], col = negColor)
+
+fTrendsPosLin = fitLinear(posPerf$change, posTrends$queries)
+points(posPerf$change, posTrends$queries, col = posColor)
+abline(fTrendsPosLin$coefficients[1], fTrendsPosLin$coefficients[2], col = posColor)
+
+result <- fitLog(negPerf$change, negTrends$queries)
+points(result[[1]], result[[2]], type = 'l', col = negColor)
+
+result <- fitLog(posPerf$change, posTrends$queries)
+points(result[[1]], result[[2]], type = 'l', col = posColor)
+```
+
+
+```{r}
+comments <- read.csv("../data/counts.csv", header = FALSE, sep = ",")
+names(comments) <- c("week", "count")
+comments$week <- as.Date(as.POSIXct(as.numeric(as.character(comments$week)),origin="1970-01-01",tz="GMT"))
+#comments$count <- minMaxNormalize(comments$count)
+comments %>% filter(perf$change > 0) -> posComments
+comments %>% filter(perf$change < 0) -> negComments
+posComments$count <- minMaxNormalize(posComments$count)
+negComments$count <- minMaxNormalize(negComments$count)
+```
+
+```{r}
+plot(posPerf$week, posPerf$change, ylim = c(0,1))
+points(posComments$week, posComments$count, col = posColor)
+
+plot(negPerf$week, negPerf$change, ylim = c(0,1))
+points(negComments$week, negComments$count, col = negColor)
+```
+
+```{r}
+fCountNegLin = fitLinear(negPerf$change, negComments$count)
+plot(negPerf$change, negComments$count, col = negColor)
+abline(fCountNegLin$coefficients[1], fCountNegLin$coefficients[2], col = negColor)
+
+fCountPosLin = fitLinear(posPerf$change, posComments$count)
+points(posPerf$change, posComments$count, col = posColor)
+abline(fCountPosLin$coefficients[1], fCountPosLin$coefficients[2], col = posColor)
+```
+
+```{r}
+sentiments <- read.csv('../data/sentiments.csv', header = FALSE, sep = ",")
+names(sentiments) <- c("week", "value")
+sentiments$week <- as.Date(as.POSIXct(as.numeric(as.character(sentiments$week)),origin="1970-01-01",tz="GMT"))
+#sentiments$value <- minMaxNormalize(sentiments$value)
+sentiments %>% filter(perf$change > 0) -> posSentiments
+sentiments %>% filter(perf$change < 0) -> negSentiments
+posSentiments$value <- minMaxNormalize(posSentiments$value)
+negSentiments$value <- minMaxNormalize(negSentiments$value)
+```
+
+
+```{r}
+fSentNegLin = fitLinear(negPerf$change, negSentiments$value)
+plot(negPerf$change, negSentiments$value, col = negColor)
+abline(fSentNegLin$coefficients[1], fSentNegLin$coefficients[2], col = negColor)
+
+fSentPosLin = fitLinear(posPerf$change, posSentiments$value)
+points(posPerf$change, posSentiments$count, col = posColor)
+abline(fSentPosLin$coefficients[1], fSentPosLin$coefficients[2], col = posColor)
+
+```
+```{r}
+plot(posPerf$change, posSentiments$value, col = "green", pch = 19, cex = .5, main="Reactions to gains",
+   xlab = "S&P 500 gain in USD", ylab=  "normalized reaction intensity")
+points(posPerf$change, posComments$count, col = "red", pch = 19, cex = .5)
+points(posPerf$change, posTrends$queries, col = "blue", pch = 19, cex = .5)
+
+abline(fSentPosLin$coefficients[1], fSentPosLin$coefficients[2], col = "green")
+abline(fCountPosLin$coefficients[1], fCountPosLin$coefficients[2], col = "red")
+abline(fTrendsPosLin$coefficients[1], fTrendsPosLin$coefficients[2], col = "blue")
+
+legend("bottomright", legend = c("sentiment", "comments", "queries"),
+       col=c("green","red", "blue"), pch=19)
+
+```
+
+
+
+```{r}
+plot(negPerf$change, negSentiments$value, col = "green", pch = 19, cex = .5, main="Reactions to losses",
+   xlab = "S&P 500 loss in USD", ylab=  "normalized reaction intensity")
+points(negPerf$change, negComments$count, col = "red", pch = 19, cex = .5)
+points(negPerf$change, negTrends$queries, col = "blue", pch = 19, cex = .5)
+
+abline(fSentNegLin$coefficients[1], fSentNegLin$coefficients[2], col = "green")
+abline(fCountNegLin$coefficients[1], fCountNegLin$coefficients[2], col = "red")
+abline(fTrendsNegLin$coefficients[1], fTrendsNegLin$coefficients[2], col = "blue")
+
+legend("bottomright", legend = c("sentiment", "comments", "queries"),
+       col=c("green","red", "blue"), pch=19)
+```
+
