@@ -109,6 +109,12 @@ Correlations between change amplitude and the number of queries are below 0.2 fo
 \endminipage
 \end{figure}
 
+
+
+Both linear, figure \ref{fig:linearTrendRegressions}, and logistic, figure \ref{fig:logTrendRegressions}, regressions make it apparent that the number of queries grows with the amplitude of a value change. What cannot be clearly deduced is that people are distinctively loss-averse as neither fitted functions nor the points itself have remarkably higher query numbers for negative changes than for corresponding positive changes.
+
+
+
 \begin{figure}[!]
 \minipage{0.32\textwidth}
   \includegraphics[width=\linewidth]{linearTrendRegressions.png}
@@ -124,12 +130,6 @@ Correlations between change amplitude and the number of queries are below 0.2 fo
 \endminipage\hfill
 \end{figure}
 
-Both linear, figure \ref{fig:linearTrendRegressions}, and logistic, figure \ref{fig:logTrendRegressions}, regressions make it apparent that the number of queries grows with the amplitude of a value change. What cannot be clearly deduced is that people are distinctively loss-averse as neither fitted functions nor the points itself have remarkably higher query numbers for negative changes than for corresponding positive changes.
-
-\subsection{External reactions}
-
-We observe in table \ref{table:externalReactions} that both the number of comments as well as the sentiment intensity have very low observed correlation with high p-values. This holds for absolute changes, positive value changes as well as negative value changes. Remembering that correlation only allows us to make statements about linear dependencies, one might still consider to fit non-linear functions. Yet this is very unpromising as can be assessed by simply looking at a scatter plot in figure \ref{fig:linExternalLosses}. It becomes apparent that the data is simply too spread out. Hence there is no reason to believe that either the number of related reddit comments or their average sentiment intensity are useful indicators for external reactions.
-
 \begin{table}[h!]
 \centering
 \begin{tabular}{|| c ||c c c c c c||} 
@@ -144,13 +144,19 @@ We observe in table \ref{table:externalReactions} that both the number of commen
 \label{table:externalReactions}
 \end{table}
 
+\subsection{External reactions}
+
+We observe in table \ref{table:externalReactions} that both the number of comments as well as the sentiment intensity have very low observed correlation with high p-values. This holds for absolute changes, positive value changes as well as negative value changes. Remembering that correlation only allows us to make statements about linear dependencies, one might still consider to fit non-linear functions. Yet this is very unpromising as can be assessed by simply looking at a scatter plot for positive changes (losses) in figure \ref{fig:linExternalLosses}. It becomes apparent that the data is simply too spread out and we observed a very similar situation for gains ans amplitude. Hence there is no reason to believe that either the number of related reddit comments or their average sentiment intensity are useful indicators for external reactions.
+
+
+
 \section{Conclusion}
 
 A comparison between internal and external reactions was not possible as the proxy data for external reactions was too close to random noise. For internal reactions, we found that there was some correlation between the value change of the index and the number of queries with legitimate p-values. Still, we were not able to observe a loss aversion effect in internal reactions.
 
 \section{Critique}
 Google Trend's restriction of only providing data per 5-day intervals is certainly a hurdle for determining reactions to a market index which can fluctuate heavily on a daily basis. This might simply dilute the effect of outliers. In particular, daily results would have been desirable. This also applies to the external reaction analysis, as the intention was to compare both. \\
-In addition, it is very well imaginable that over such a long period, the different user numbers and behaviours of the referenced technologies might skew the numbers. Reddit is not to be considered in a 'steady state' but its user and comment counts, as well activity in specific subreddits fluctuate. Likewise, both the user behaviour of searching for a market index on Google as well as Google's counting methodology are prone to changes indepdent of user interest in market indices. 
+In addition, it is very well imaginable that over such a long period, the different user numbers and behaviours of the referenced technologies might skew the numbers. Reddit is not to be considered in a 'steady state' but its user and comment counts, as well activity in specific subreddits fluctuate. Likewise, both the user behaviour of searching for a market index on Google as well as Google's counting methodology are prone to changes independent of user interest in market indices. 
 %-------------------------------------------------------------------------------
 % REFERENCES
 %-------------------------------------------------------------------------------
