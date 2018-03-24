@@ -30,6 +30,23 @@ minMaxNormalize <- function(x) {
   return((x - min(x))/(max(x) - min(x)))
 }
 
+# two-sided
+pValue <- function(x, y, title) {
+  foundCorrelation <- cor(x, y)
+  n_permutations <- 10000
+  correlations <- numeric(n_permutations)
+  for (i in 1:n_permutations) {
+    correlations[i] <- cor(x, sample(y))
+  }
+  p <- sum(abs(correlations) >= abs(foundCorrelation)) / length(correlations)
+  png(filename=paste(title, "Correlations.png", sep = ""))
+  hist(correlations, main=paste("Histogram of",title, "correlations, p =",round(p, digits = 3)))
+  abline(v=foundCorrelation, col="red")
+  text(foundCorrelation + 0.025, 500, round(foundCorrelation, digits = 3), col = "red") 
+  dev.off()
+  return(p)
+}
+
 posColor = "red"
 negColor = "blue"
 nWeeks = 254
@@ -99,9 +116,19 @@ negPerf$change = - negPerf$change
 ```{r}
 trends %>% filter(perf$change > 0) -> posTrends
 trends %>% filter(perf$change < 0) -> negTrends
-posTrends$queries <- minMaxNormalize(posTrends$queries)
-negTrends$queries <- minMaxNormalize(negTrends$queries)
+#posTrends$queries <- minMaxNormalize(posTrends$queries)
+#negTrends$queries <- minMaxNormalize(negTrends$queries)
 ```
+
+```{r}
+posTrendsCor <- pValue(posTrends$queries, posPerf$change, 'positive query')
+posTrendsCor
+negTrendsCor <- pValue(negTrends$queries, negPerf$change, 'negative query')
+negTrendsCor
+trendsCor <- pValue(trends$queries[1:nWeeks - 1], abs(perf$change[1:nWeeks - 1]), 'query')
+trendsCor
+```
+
 
 ```{r}
 plot(posPerf$week, posPerf$change, ylim = c(0, 1))
@@ -112,19 +139,38 @@ points(negTrends$week, negTrends$queries, col = negColor)
 ```
 
 ```{r}
+png('linearTrendRegressions.png')
 fTrendsNegLin = fitLinear(negPerf$change, negTrends$queries)
-plot(negPerf$change, negTrends$queries, col = negColor)
+plot(posPerf$change, posTrends$queries, cex=0.5, col = posColor, xlab = 'Absolute change [USD]', ylab = '#queries', xlim = c(min(posPerf$change, negPerf$change), max(posPerf$change, negPerf$change)), ylim = c(min(posTrends$queries, negTrends$queries), max(posTrends$queries, negTrends$queries)))
 abline(fTrendsNegLin$coefficients[1], fTrendsNegLin$coefficients[2], col = negColor)
 
 fTrendsPosLin = fitLinear(posPerf$change, posTrends$queries)
-points(posPerf$change, posTrends$queries, col = posColor)
+points(negPerf$change, negTrends$queries, col = negColor, cex = 0.5)
 abline(fTrendsPosLin$coefficients[1], fTrendsPosLin$coefficients[2], col = posColor)
+
+legend("topright", legend=c("Positive change datapoint", "Negative change datpoint", "Positive Lin. Regression", "Negative Lin. Regression"),
+       col=c(posColor, negColor, posColor, negColor), lty=c(NA, NA, 1,1), pch=c(1, 1, NA, NA), cex=0.8)
+
+dev.off()
+
+
+png('logTrendRegressions.png')
+
+plot(posPerf$change, posTrends$queries, cex = 0.5, col = posColor, xlab = 'Absolute change [USD]', ylab = '#queries', xlim = c(min(posPerf$change, negPerf$change), max(posPerf$change, negPerf$change)), ylim = c(min(posTrends$queries, negTrends$queries), max(posTrends$queries, negTrends$queries)))
+points(negPerf$change, negTrends$queries, col = negColor, cex = 0.5)
 
 result <- fitLog(negPerf$change, negTrends$queries)
 points(result[[1]], result[[2]], type = 'l', col = negColor)
 
 result <- fitLog(posPerf$change, posTrends$queries)
 points(result[[1]], result[[2]], type = 'l', col = posColor)
+
+legend("topright", legend=c("Positive change datapoint", "Negative change datpoint", "Positive Log. Regression", "Negative Log. Regression"),
+       col=c(posColor, negColor, posColor, negColor), lty=c(NA, NA, 1,1), pch=c(1, 1, NA, NA), cex=0.8)
+
+dev.off()
+
+#hist(fTrendsNegLin$residuals)
 ```
 
 
@@ -132,12 +178,23 @@ points(result[[1]], result[[2]], type = 'l', col = posColor)
 comments <- read.csv("../data/counts.csv", header = FALSE, sep = ",")
 names(comments) <- c("week", "count")
 comments$week <- as.Date(as.POSIXct(as.numeric(as.character(comments$week)),origin="1970-01-01",tz="GMT"))
-#comments$count <- minMaxNormalize(comments$count)
+comments$count <- minMaxNormalize(comments$count)
 comments %>% filter(perf$change > 0) -> posComments
 comments %>% filter(perf$change < 0) -> negComments
-posComments$count <- minMaxNormalize(posComments$count)
-negComments$count <- minMaxNormalize(negComments$count)
+#posComments$count <- minMaxNormalize(posComments$count)
+#negComments$count <- minMaxNormalize(negComments$count)
 ```
+
+```{r}
+pPosComments <- pValue(posComments$count, posPerf$change, 'positive comment')
+pPosComments
+pNegComments <- pValue(negComments$count, negPerf$change, 'negative comment')
+pNegComments
+pComments <- pValue(comments$count[1:nWeeks - 1], abs(perf$change[1:nWeeks - 1]), 'comment')
+pComments
+
+```
+
 
 ```{r}
 plot(posPerf$week, posPerf$change, ylim = c(0,1))
@@ -161,11 +218,19 @@ abline(fCountPosLin$coefficients[1], fCountPosLin$coefficients[2], col = posColo
 sentiments <- read.csv('../data/sentiments.csv', header = FALSE, sep = ",")
 names(sentiments) <- c("week", "value")
 sentiments$week <- as.Date(as.POSIXct(as.numeric(as.character(sentiments$week)),origin="1970-01-01",tz="GMT"))
-#sentiments$value <- minMaxNormalize(sentiments$value)
+sentiments$value <- minMaxNormalize(sentiments$value)
 sentiments %>% filter(perf$change > 0) -> posSentiments
 sentiments %>% filter(perf$change < 0) -> negSentiments
-posSentiments$value <- minMaxNormalize(posSentiments$value)
-negSentiments$value <- minMaxNormalize(negSentiments$value)
+#posSentiments$value <- minMaxNormalize(posSentiments$value)
+#negSentiments$value <- minMaxNormalize(negSentiments$value)
+```
+
+```{r}
+pPosSentiments <- pValue(posSentiments$value, posPerf$change, 'positive sentiment')
+pPosSentiments
+pNegSentiments <- pValue(negSentiments$value, negPerf$change, 'negative sentiment')
+pNegSentiments
+pSentiments <- pValue(sentiments$value[1:nWeeks - 1], abs(perf$change[1:nWeeks - 1]), 'sentiment')
 ```
 
 
@@ -179,6 +244,7 @@ points(posPerf$change, posSentiments$count, col = posColor)
 abline(fSentPosLin$coefficients[1], fSentPosLin$coefficients[2], col = posColor)
 
 ```
+
 ```{r}
 plot(posPerf$change, posSentiments$value, col = "green", pch = 19, cex = .5, main="Reactions to gains",
    xlab = "S&P 500 gain in USD", ylab=  "normalized reaction intensity")
@@ -197,16 +263,18 @@ legend("bottomright", legend = c("sentiment", "comments", "queries"),
 
 
 ```{r}
-plot(negPerf$change, negSentiments$value, col = "green", pch = 19, cex = .5, main="Reactions to losses",
-   xlab = "S&P 500 loss in USD", ylab=  "normalized reaction intensity")
-points(negPerf$change, negComments$count, col = "red", pch = 19, cex = .5)
-points(negPerf$change, negTrends$queries, col = "blue", pch = 19, cex = .5)
+png("externalReactionsLosses.png")
+plot(negPerf$change, negSentiments$value, col = "green", cex = .5,
+   xlab = "Absolute change [USD]", ylab="normalized reaction intensity", ylim=c(0,1))
+points(negPerf$change, negComments$count, col = "purple", cex = .5)
+#points(negPerf$change, negTrends$queries, col = "blue", pch = 19, cex = .5)
 
 abline(fSentNegLin$coefficients[1], fSentNegLin$coefficients[2], col = "green")
-abline(fCountNegLin$coefficients[1], fCountNegLin$coefficients[2], col = "red")
-abline(fTrendsNegLin$coefficients[1], fTrendsNegLin$coefficients[2], col = "blue")
+abline(fCountNegLin$coefficients[1], fCountNegLin$coefficients[2], col = "purple")
+#abline(fTrendsNegLin$coefficients[1], fTrendsNegLin$coefficients[2], col = "blue")
 
-legend("bottomright", legend = c("sentiment", "comments", "queries"),
-       col=c("green","red", "blue"), pch=19)
+legend("topright", legend = c("Sentiment", "Comments", "Sentiment Lin. Regression", "Comments Lin. Regression"),
+       col=c("green","purple", "green", "purple"), lty=c(NA, NA, 1,1), pch=c(1, 1, NA, NA))
+dev.off()
 ```
 
